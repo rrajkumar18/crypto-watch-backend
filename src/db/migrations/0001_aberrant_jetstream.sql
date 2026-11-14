@@ -1,0 +1,1 @@
+ALTER TABLE "market_trades" ALTER COLUMN "event_id" SET DATA TYPE text;

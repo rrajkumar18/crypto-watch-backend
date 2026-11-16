@@ -1,19 +1,31 @@
 import WebSocket from "ws";
-import { env } from "../config/env";
-import { BinanceCombinedMessage, BinanceAggregateTrade, MarketTradeEvent } from "./binance.types";
-import { RabbitMQService } from "../rabbit-mq/rabbitmq.service";
+import { env } from "../../config/env";
+import { BinanceAggregateTrade, MarketTradeEvent } from "./binance.types";
+import { RabbitMQService } from "../../rabbit-mq/rabbitmq.service";
 
 export class BinanceService {
 
-    private socket?:WebSocket;
+    private socket?:WebSocket | undefined;
     private reconnectTimer?:NodeJS.Timeout | undefined;
     private readonly reconnectDelay = 5000;
+    private isRunning = false;
 
     constructor( private readonly rabbitMQ: RabbitMQService) {
         
     }
 
     start():void {
+        if (this.isRunning) {
+            console.log("[Binance] Already running");
+            return;
+        }
+        this.isRunning = true;
+        this.connect();
+    }
+
+    private connect():void {
+        if(!this.isRunning) return;
+
         console.log('[Binance] >>> start() ENTERED');
         const streams = env.binanceSymbols.map((symbol) => `${symbol.toLocaleLowerCase()}@aggTrade`);
         let url = env.binanceWsUrl;
@@ -37,7 +49,7 @@ export class BinanceService {
         });
 
         this.socket.on('message',(raw) => {
-            console.log(`[Binance] receive message`);
+            // console.log(`[Binance] received message`);
             this.handleMessage(raw.toString());
         });
 
@@ -57,7 +69,6 @@ export class BinanceService {
                 response.statusMessage
             );
         });
-
     }
 
     private handleMessage(message:string):void {
@@ -83,13 +94,6 @@ export class BinanceService {
             receivedAt: receivedAt,
             buyerIsMaker: event.m,
         };
-        // console.log(
-        //     `[Trade] ${event.s} ` +
-        //     `price=${event.p} ` +
-        //     `quantity=${event.q} ` +
-        //     `time=${new Date(event.T).toISOString()}`
-        // );
-
         try {
             await this.rabbitMQ.publishTrade(tradeEvent);
         } catch (error) {
@@ -98,22 +102,42 @@ export class BinanceService {
     }
 
     private scheduleReconnect():void {
-        if( this.reconnectTimer ) {
+        if (!this.isRunning || this.reconnectTimer) {
             return;
         }
         console.log(`[Binance] Reconnecting in ${this.reconnectDelay / 1000}s...`);
         this.reconnectTimer = setTimeout(() => {
             this.reconnectTimer = undefined;
-            this.start();
+            if (this.isRunning) {
+                this.connect();
+            }
         }, this.reconnectDelay);
     }
 
-    stop():void {
-        if( this.reconnectTimer ) {
+    async stop(): Promise<void> {
+        this.isRunning = false;
+        if (this.reconnectTimer) {
             clearTimeout(this.reconnectTimer);
             this.reconnectTimer = undefined;
         }
-        this.socket?.close();
+
+        const socket = this.socket;
+        this.socket = undefined;
+
+        if ( socket && socket.readyState !== WebSocket.CLOSED ) {
+            await new Promise<void>((resolve) => {
+                const timeout = setTimeout(resolve, 2000);
+                socket.once("close", () => {
+                    clearTimeout(timeout);
+                    resolve();
+                });
+                socket.close();
+            });
+        }
+
+        // Flush incomplete batches before stopping collection.
+        await this.rabbitMQ.flushTrades();
+        console.log("[Binance] Stopped and pending trades flushed");
     }
 
 }

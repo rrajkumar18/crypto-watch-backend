@@ -15,6 +15,20 @@
       "when": 1791451784659,
       "tag": "0001_aberrant_jetstream",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794658099947,
+      "tag": "0002_romantic_firebird",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794811583768,
+      "tag": "0003_sticky_mattie_franklin",
+      "breakpoints": true
     }
   ]
 }

@@ -16,4 +16,18 @@ export const env = {
         .filter(Boolean),
     rabbitmqUrl: required('RABBITMQ_URL'),
     pgUrl: required('PG_URL'),
+    timezone: 'Asia/Kolkata',
+    jobStartHour: 9,
+    jobEndHour: 23,
+    pollInterval:5000,
+    automaticCollectionMinutes: 2,
+    automaticPauseMinutes: 45,
+    manualCollectionSeconds: 60,
+    tradeBatchSize: 100,
+    tradeBatchFlushIntervalMs: 2000,
+    tradeMaxBufferSize: 2000,
+    // for testing
+    // automaticCollectionMinutes: 1,
+    // automaticPauseMinutes: 1,
+    // manualCollectionSeconds: 30,
 }

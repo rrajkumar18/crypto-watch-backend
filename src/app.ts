@@ -8,13 +8,23 @@ import { createMarketRouter } from "./routes/route";
 
 export function createApp(sse: SseService, sessions:MarketSessionService) {
     const app = express();
-    app.use(express.json());
+    const allowedOrigins = [
+        'http://localhost:3000',
+        'https://url-shortner-frontend-nine-sigma.vercel.app',
+    ];    
     app.use(cors({
-        // origin: "http://localhost:3000",
-        // origin: "*",
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error(`Origin ${origin} not allowed by CORS`));
+            }
+        },
         credentials: true,
-        methods: ["GET", "OPTIONS"]
+        methods: ['GET', 'POST', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
     }));
+    app.use(express.json());
 
     app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
     app.use("/api/market", createMarketRouter(sse, sessions));

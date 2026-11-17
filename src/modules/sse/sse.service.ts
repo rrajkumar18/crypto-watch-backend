@@ -52,12 +52,10 @@ export class SseService {
         const id = this.nextClientId++;
         response.status(200);
         response.set({
-            "Content-Type": "text/event-stream",
+            "Content-Type": "text/event-stream; charset=utf-8",
             "Cache-Control": "no-cache, no-transform",
             "Connection": "keep-alive",
             "X-Accel-Buffering": "no",
-            // "Access-Control-Allow-Origin": "http://localhost:3000",
-            "Access-Control-Allow-Origin": "*",
         });
         response.flushHeaders();
 

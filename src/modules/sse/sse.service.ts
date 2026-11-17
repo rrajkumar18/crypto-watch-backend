@@ -56,7 +56,8 @@ export class SseService {
             "Cache-Control": "no-cache, no-transform",
             "Connection": "keep-alive",
             "X-Accel-Buffering": "no",
-            "Access-Control-Allow-Origin": "http://localhost:3000",
+            // "Access-Control-Allow-Origin": "http://localhost:3000",
+            "Access-Control-Allow-Origin": "*",
         });
         response.flushHeaders();
 

@@ -73,8 +73,9 @@ export class BinanceService {
 
     private handleMessage(message:string):void {
         try {
-            const parsed = JSON.parse(message) as BinanceAggregateTrade;
-            void this.handleTrade(parsed);
+            const parsed = JSON.parse(message);
+            const data = parsed.data as BinanceAggregateTrade;
+            void this.handleTrade(data);
         } catch (error) {
             console.error('[Binance] Failed to parse message:', error);
         }

@@ -119,7 +119,7 @@ export class MarketTradeWorker {
             }));            
 
             // console.log(`[Worker] Processing batch of ${events.length} trades`);
-            // await this.trade.saveTrades(events);
+            await this.trade.saveTrades(events);
             // ACK only after the database insertion succeeds.
             this.channel?.ack(message);
 
